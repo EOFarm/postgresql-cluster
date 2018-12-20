@@ -1,0 +1,24 @@
+---
+
+all:
+  vars:
+    network: '10.0.4.0/24'
+
+  children:
+    'master':
+      hosts:
+        'postgres-n1':
+          ansible_host: postgres-n1.internal
+          ansible_port: 22
+          fqdn: postgres-n1.internal
+          hostname: postgres-n1
+          ipv4_address: '10.0.4.95'
+    'standby':
+      hosts:
+        'postgres-n2':
+          ansible_host: postgres-n2.internal
+          ansible_port: 22
+          fqdn: postgres-n2.internal
+          hostname: postgres-n2
+          ipv4_address: '10.0.4.96'
+         

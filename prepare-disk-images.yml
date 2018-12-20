@@ -1,0 +1,21 @@
+---
+
+ - hosts: all
+   connection: local
+
+   tasks:
+
+   #- debug: var=inventory_hostname
+   
+   - set_fact:
+       disk_size: 10240
+
+   - file: 
+       path: 'data/{{inventory_hostname}}'
+       state: directory 
+       mode: '0775'
+
+   - name: Create VDI disk images
+     shell: >
+       vboxmanage createmedium disk --filename "data/{{inventory_hostname}}/1.vdi" --size "{{disk_size}}" --format VDI
+

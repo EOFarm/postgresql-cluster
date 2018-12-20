@@ -1,0 +1,24 @@
+---
+
+ #
+ # Setup partition for database tablespace
+ #
+
+ - hosts: all
+
+   vars:
+     #data_partition: /dev/sdc1
+     data_partition: ~
+     fstype: 'ext4'
+     mountpoint: {path: '/var/local/postgresql', owner: 'root', group: 'root', opts: 'defaults'} 
+   
+   roles:
+   - 'local-fs'
+
+   tasks:
+    
+   - stat: path=/var/local/postgresql
+     register: data_stat_result
+   - assert: 
+       that: data_stat_result.stat.isdir
+

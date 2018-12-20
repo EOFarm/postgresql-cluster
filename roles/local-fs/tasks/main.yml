@@ -1,0 +1,68 @@
+---
+
+  - debug: var=data_partition
+  - debug: var=fstype
+  - debug: var=mountpoint
+
+  - name: Find the block device that is not yet partitioned
+    shell: >
+      lsblk --json -o NAME,UUID | 
+         jq '.blockdevices[] | select(.children == null and .uuid == null)' |
+         jq --slurp --raw-output 'map(.name) | first // empty'
+    register: device_to_be_partitioned_result
+    when: not (data_partition | default(false))
+
+  - set_fact:
+      device_to_be_partitioned: '{{device_to_be_partitioned_result.stdout | default("")}}'  
+    when: not (data_partition | default(false))
+
+  - name: Partition storage device, if not already partitioned
+    parted:
+      device: '/dev/{{device_to_be_partitioned}}'
+      number: 1
+      state: present
+    when: not (data_partition | default(false)) and device_to_be_partitioned != ''
+   
+  - name: Check primary partition created
+    shell: >
+      lsblk --json -o NAME,PARTUUID "/dev/{{device_to_be_partitioned}}1" | 
+        jq -e '.blockdevices[] | .partuuid'
+    register: partition_uuid_result
+    when: not (data_partition | default(false)) and device_to_be_partitioned != ''
+
+  - set_fact:
+      data_partition: '/dev/{{device_to_be_partitioned}}1' 
+    when: not (data_partition | default(false)) and device_to_be_partitioned != ''
+   
+  - assert:
+      that: data_partition is defined
+
+  - name: Make filesystem on partition
+    filesystem:
+      fstype: '{{fstype}}'
+      dev: '{{data_partition}}'
+
+  - name: Find UUID of data partition
+    shell: >
+      lsblk -O --json '{{data_partition}}' | jq -e --raw-output '.blockdevices[] | .uuid'
+    register: data_partition_uuid_result
+  
+  - set_fact:
+      data_partition_uuid: '{{data_partition_uuid_result.stdout}}'
+
+  - name: Create root directory for mounting the partition
+    file: 
+      path: '{{mountpoint.path}}' 
+      state: directory 
+      mode: '0775' 
+      owner: '{{mountpoint.owner | default(omit)}}' 
+      group: '{{mountpoint.group | default(omit)}}'
+   
+  - name: Add entry for data partition in /etc/fstab (and mount it)
+    mount: 
+      name: '{{mountpoint.path}}'
+      src: 'UUID={{data_partition_uuid}}' 
+      fstype: '{{fstype}}'
+      opts: '{{mountpoint.opts | default(omit)}}' 
+      state: mounted
+

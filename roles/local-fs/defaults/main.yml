@@ -1,0 +1,9 @@
+---
+
+# Note: if `data_partition` is empty, we assume that the partition is already created.
+# Otherwise, we find an unused block device to partition with a single primary partition 
+data_partition: '/dev/sdc1'
+
+fstype: 'ext4'
+
+mountpoint: {path: '/data', owner: 'root', group: 'adm', opts: 'defaults'} 

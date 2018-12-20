@@ -1,0 +1,9 @@
+*.retry
+/files/secrets
+/keys/
+/data/
+
+hosts.yml
+
+/.vagrant/
+/vagrant-data/
