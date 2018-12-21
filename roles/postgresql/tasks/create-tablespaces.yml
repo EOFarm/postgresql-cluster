@@ -1,0 +1,13 @@
+---
+
+  - name: Create directory structure for tablespace(s)
+    file: path={{item.path}} state=directory owner=postgres group=postgres mode=0755
+    with_items: '{{postgres.tablespaces}}'
+
+  - name: Create tablespaces
+    command: psql -c "CREATE TABLESPACE {{item.name}} LOCATION '{{item.path}}'" 
+    become: yes
+    become_user: postgres
+    with_items: '{{postgres.tablespaces}}'
+    when: not item.name in existing_tablespaces
+

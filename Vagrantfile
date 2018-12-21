@@ -28,14 +28,14 @@ Vagrant.configure(2) do |config|
         '--medium', File.absolute_path("data/postgres-n1/1.vdi")]
     end
 
-#    master.vm.provision "setup-cluster",  type: "ansible" do |ansible|
-#      ansible.playbook = 'play-cluster.yml'
-#      ansible.limit = 'all' # do not limit to master (take standby nodes into play)
-#      ansible.become = true
-#      ansible.become_user = 'root'
-#      ansible.inventory_path = inventory_file
-#      ansible.verbose = true
-#    end
+    master.vm.provision "setup-database",  type: "ansible" do |ansible|
+      ansible.playbook = 'play-database.yml'
+      ansible.limit = 'all' # do not limit to master (take standby nodes into play)
+      ansible.become = true
+      ansible.become_user = 'root'
+      ansible.inventory_path = inventory_file
+      ansible.verbose = true
+    end
 
   end
 

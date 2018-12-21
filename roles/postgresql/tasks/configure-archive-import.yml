@@ -1,0 +1,11 @@
+---
+  
+  # Configure rsync to fetch exported WAL archives
+  
+  - name: Copy password file needed for rsync transfer
+    copy: 
+      content: '{{rsync_password}}' 
+      dest: '{{config_dir}}/rsync-password' 
+      owner: postgres
+      group: postgres 
+      mode: 0600

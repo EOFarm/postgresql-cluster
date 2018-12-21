@@ -1,0 +1,23 @@
+---
+
+  - name: Create database users
+    command: psql -c 'CREATE USER "{{item.name}}" WITH {{item.options| default(["LOGIN"])| join(" ")}}'
+    become: yes
+    become_user: postgres
+    with_items: '{{postgres.users}}'
+    when: not item.name in existing_users
+
+  - name: Create replication-charged user
+    command: psql -c 'CREATE USER "{{replication.user}}" WITH REPLICATION'
+    become: yes
+    become_user: postgres
+    when: replication.user and not replication.user in (existing_users| union(requested_users))
+
+  - name: Set user passwords
+    command: psql -c 'ALTER ROLE "{{item}}" PASSWORD $${{lookup("password", password_arg)}}$$'
+    become: yes
+    become_user: postgres
+    with_items: '{{known_users}}'
+    vars:
+      password_arg: '{{secrets_dir ~ "/users/" ~ item ~ " " ~ password_spec}}'
+

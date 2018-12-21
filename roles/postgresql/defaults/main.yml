@@ -1,0 +1,74 @@
+---
+
+postgres:
+
+  pgtune: false
+  
+  # The directory to store/read credentials
+  secrets_dir: 'secrets'
+  
+  # The spec to use when generating user passwords
+  password_spec: 'chars=ascii_letters,digits length=9'
+
+  # Provide users with their role flags
+  # Notes: 
+  #  - If allowed addresses is omited, default is 'samehost'
+  #  - If trusted is given, local (unix socket) connections are trusted
+  users: [] 
+  #users:
+  #- name: tester
+  #  options: [LOGIN, CREATEDB]
+  #  allowed_addresses: 
+  #  - 'samenet'
+  #  - '192.168.5.0/24'
+  #  - { address: '192.168.7.0/24', require_ssl: yes }
+  #  - { address: '192.168.1.15/31' }
+  #- name: nowhere-man
+  #  options: [LOGIN]
+  #  allowed_addresses: all
+  #- name: collectd
+  #  trusted: true
+
+  # Additional tablespaces to be created
+  tablespaces: []
+  #tablespaces:
+  #- name: tablespace_1
+  #  path: /var/local/lib/postgresql/tablespace-1
+  
+  # A set of databases to be created
+  databases: []
+  #databases:
+  #- name: scratch1
+  #  tablespace: tablespace_1
+  #  owner: tester
+  #  extensions: [hstore, postgis]
+  #  readers: [nowhere-man]
+  #  writers: [tester]
+  #  initialize:
+  #  - files/setup-scripts/scratch1/1.sql
+  #  - files/setup-scripts/scratch1/2.sql
+
+  replication:
+    # The mode (role) of operation; choose: master, standby 
+    role: ~
+    #role: master
+    
+    # The user that will connect with the (streaming) replication protocol
+    # Note: The specified user will be created even if not contained in `users` list
+    user: replicator
+    
+    master: ~
+    #master:
+    #  # Number of WAL segments to keep (see wal_keep_segments)
+    #  num_wal_segments: 32
+    #  clients:
+    #    # Maximum expected number of standby clients
+    #    max_num: 3
+    #    # Provide the addresses for clients as a list of either hosts or subnets
+    #    # The special values `samenet` and `samehost` are recognized (as in pg_hba.conf) 
+    #    allowed_addresses: ['localhost']
+
+    standby: ~
+    #standby:
+    #  master_host: 192.168.56.105
+

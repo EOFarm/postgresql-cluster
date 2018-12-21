@@ -8,7 +8,7 @@ You must install `Ansible` on the control machine, preferably in a virtual Pytho
 
     virtualenv pyenv
     . pyenv/bin/activate
-    pip install ansible==2.3 netaddr
+    pip install ansible==2.5 netaddr
 
 ### 0.2 Provide SSH keys ###
 
@@ -30,6 +30,8 @@ Verify images are created. For example:
 An single inventory file should be created at `hosts.yml`. Both `vagrant` and `ansible` will use this same inventory.
 An example inventory file can be found [here](hosts.yml.example).
 
+Also, group variables under `group_vars` must be configured. See `group_vars/*.yml.example` files for available options.
+
 ## 2.1 Setup with Vagrant and Ansible ##
 
 If we want a full Vagrant environment (of course we will also need `vagrant` installed), setup the machines and provision in multiple phases.
@@ -43,6 +45,7 @@ Provision in several phases:
     
     vagrant provision --provision-with=setup-basic
     vagrant provision --provision-with=setup-data-partition
+    vagrant provision --provision-with=setup-database
 
 ## 2.2 Setup with Ansible only ##
 
@@ -51,3 +54,4 @@ then we can directly play the Ansible playbooks:
 
     ansible-playbook --become --become-user root play-basic.yml
     ansible-playbook --become --become-user root [-e data_partition=/dev/sdc1] play-data-partition.yml
+    ansible-playbook --become --become-user root play-database.yml

@@ -1,0 +1,95 @@
+---
+
+  #- debug: var=existing_databases
+  #- debug: var=postgres.databases
+
+  # Create databases
+  
+  - name: Create databases
+    command: psql -c 'CREATE DATABASE "{{db_name}}" OWNER "{{db_owner}}" TABLESPACE {{db_tablespace}}'
+    become: yes
+    become_user: postgres
+    with_items: '{{postgres.databases}}'
+    when: db_name not in existing_databases
+    vars:
+      db_name: "{{item.name}}"
+      db_owner: "{{item.owner}}"
+      db_tablespace: "{{item.tablespace| default('DEFAULT')}}"
+
+  - name: Load extensions into databases
+    command: psql -c 'CREATE EXTENSION IF NOT EXISTS {{item.1}}' '{{item.0.name}}'
+    become_user: postgres
+    with_subelements: 
+    - '{{postgres.databases}}'
+    - 'extensions' 
+    when: item.0.name not in existing_databases
+  
+  # Todo: Is there a better way to do this?
+  # The previous CREATE-EXTENSION statements leaves postgis-related tables unusable for the database owner.
+  - name: Fix postgis permissions for owner
+    command: psql -c 'ALTER TABLE {{item.1}} OWNER TO "{{item.0.owner}}"' '{{item.0.name}}'
+    become: yes
+    become_user: postgres
+    with_nested:
+    - '{{postgres.databases}}'
+    - 
+      - 'spatial_ref_sys'
+      - 'geometry_columns'
+      - 'geography_columns'
+      - 'raster_columns'
+      - 'raster_overviews'
+    when: '"postgis" in item.0.extensions'
+
+  # Define default privileges
+  # Note: This must be done before creating any objects inside the databases!
+
+  - name: Grant default read priviledges to entire schemata
+    command: >
+      psql 
+        -c 'ALTER DEFAULT PRIVILEGES FOR ROLE "{{item.0.owner}}" IN SCHEMA public GRANT SELECT ON TABLES TO "{{item.1}}"'
+        -d '{{item.0.name}}'
+    become: yes
+    become_user: postgres
+    with_subelements:
+    - '{{postgres.databases}}'
+    - 'readers'
+
+  - name: Grant default read/write priviledges to entire schemata
+    command: >
+      psql 
+        -c 'ALTER DEFAULT PRIVILEGES FOR ROLE "{{item.0.owner}}" IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE ON TABLES TO "{{item.1}}"'
+        -d '{{item.0.name}}'
+    become: yes
+    become_user: postgres
+    with_subelements:
+    - '{{postgres.databases}}'
+    - 'writers'
+
+  # Initialize databases running user-provided (DDL?) SQL scripts 
+  # Note: The results (output and error logs) can be found at /var/tmp.
+
+  - name: Copy SQL init scripts to target host
+    copy: 
+      src: "{{item.1.local_path}}"
+      dest: "/var/tmp/{{item.0.name}}-{{item.1.local_path| md5}}.sql"
+      owner: postgres
+      group: postgres
+    with_subelements: 
+    - '{{postgres.databases}}'
+    - 'initialize' 
+    when: item.0.name not in existing_databases
+  
+  - name: Feed SQL init scripts into target database
+    shell: >
+      psql -a -v ON_ERROR_STOP=1 {{'-1' if item.1.single_transaction else ''}} -L /var/tmp/{{item.0.name}}.out.log
+      -f /var/tmp/{{item.0.name}}-{{item.1.local_path| md5}}.sql -d {{item.0.name}} 
+      1>/var/tmp/{{item.0.name}}-{{item.1.local_path| md5}}.out.log
+      2>/var/tmp/{{item.0.name}}-{{item.1.local_path| md5}}.err.log
+    register: psql_i_result
+    become: yes
+    become_user: postgres
+    with_subelements: 
+    - '{{postgres.databases}}'
+    - 'initialize'
+    when: item.0.name not in existing_databases
+   

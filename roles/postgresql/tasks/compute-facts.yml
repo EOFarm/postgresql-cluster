@@ -1,0 +1,72 @@
+---
+  
+  - set_fact: 
+      replication: '{{postgres.replication}}'
+  
+  - assert:
+      that: not (replication.role == 'standby') or (replication.standby.master_host in groups.all)
+
+  # Compute basic directory paths
+  
+  - set_fact:
+      config_dir: '/etc/postgresql/{{postgres.version}}/main'
+      run_dir: '/var/run/postgresql'
+      archive_dir: '/var/backups/postgresql/{{postgres.version}}/archive' 
+      basebackup_dir: '/var/tmp/postgresql/{{postgres.version}}/backup'
+  
+  - name: Determine where is the data directory for the main cluster
+    shell: pg_lsclusters --no-header| grep -e '^{{postgres.version}}'| cut -f 6 -d ' '
+    register: pg_lsclusters_result
+
+  - set_fact:
+      data_dir: '{{pg_lsclusters_result.stdout}}'
+  
+  - name: List existing users
+    shell: psql -t -A -F ',' -c '\du'| awk -F ',' -- '{print $1}' 
+    become: yes
+    become_user: postgres
+    register: psql_du_result
+  
+  # Generate password for archive transfers 
+  
+  - set_fact:
+      rsync_password: '{{lookup("password", postgres.secrets_dir ~ "/rsync" ~ " " ~ "chars=ascii_letters,digits")}}' 
+
+  # Compute user-related facts
+  
+  - set_fact:
+      existing_users: '{{psql_du_result.stdout_lines}}'
+      requested_users: '{{postgres.users| map(attribute="name")| list}}'
+
+  - set_fact:
+      known_users: '{{requested_users| union(existing_users)}}'
+  - set_fact:
+      known_users: '{{known_users| union([replication.user])}}'
+    when: replication.user
+  
+  - set_fact:
+      secrets_dir: '{{postgres.secrets_dir}}'
+      password_spec: '{{postgres.password_spec}}'
+
+  # Compute tablespace-related facts
+
+  - name: List existing tablespaces
+    shell: psql -t -A -F ',' -c '\db'| awk -F ',' -- '{print $1}' 
+    become: yes
+    become_user: postgres
+    register: psql_db_result
+
+  - set_fact:
+      existing_tablespaces: '{{psql_db_result.stdout_lines| difference(["pg_default", "pg_global"])}}'
+   
+   # Compute database-related facts
+
+  - name: List existing databases
+    shell: psql -A -F ',' -R '$' -t -c '\l'| awk -F ',' -v 'RS=$' -- '{print $1}'
+    become: yes
+    become_user: postgres
+    register: psql_l_result
+  
+  - set_fact:
+      existing_databases: '{{psql_l_result.stdout_lines}}'
+

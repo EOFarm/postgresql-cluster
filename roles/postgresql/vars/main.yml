@@ -1,0 +1,8 @@
+---
+
+postgres:
+  version: '9.5'
+
+postgis:
+  # Must be compatible with above PostgreSQL version
+  version: '2.2'

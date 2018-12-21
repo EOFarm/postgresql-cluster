@@ -1,9 +1,21 @@
 *.retry
+*.bak
+*.log
+
+scratch*.yml
+
+/temp/
+
 /files/secrets
+/files/database
 /keys/
 /data/
 
-hosts.yml
+/hosts.yml
+/group_vars/all.yml
+/group_vars/master.yml
+/group_vars/standby.yml
+
 
 /.vagrant/
 /vagrant-data/

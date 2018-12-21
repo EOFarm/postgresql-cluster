@@ -1,0 +1,35 @@
+---
+
+postgres:
+  
+  pgtune: false
+  
+  # Define playbook-level directory to store/read credentials
+  secrets_dir: '{{"files/secrets"| realpath}}'  
+
+  # Define users
+  users:
+  - name: 'tester'
+    options: ['LOGIN']
+    allowed_addresses: ['samenet']
+  - name: 'nowhere-man'
+    options: ['LOGIN']
+    allowed_addresses: ['samenet']
+  
+  # Additional tablespaces to be created
+  tablespaces:
+  - name: 'tablespace_1'
+    path: /var/local/postgresql/tablespace_1
+
+  # Databases to be created
+  databases:
+  - name: 'scratch1'
+    tablespace: 'tablespace_1'
+    owner: 'tester'
+    extensions: ['hstore', 'postgis']
+    readers: ['nowhere-man']
+    writers: []
+    initialize: 
+    - local_path: files/database/setup-scripts/scratch1/1.sql
+      single_transaction: yes
+
