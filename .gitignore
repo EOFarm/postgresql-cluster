@@ -16,6 +16,7 @@ scratch*.yml
 /group_vars/master.yml
 /group_vars/standby.yml
 
+/.pyenv/
 
 /.vagrant/
 /vagrant-data/
