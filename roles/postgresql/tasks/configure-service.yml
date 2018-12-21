@@ -21,20 +21,6 @@
   
   - name: Generate a basic configuration at postgresql.conf
     template: src=etc/postgresql/postgresql.conf dest={{config_dir}}/postgresql.conf owner=postgres group=postgres backup=yes
-    
-  # Tune  
-
-  - name: Generate locally-tuned configuration at postgresql-tuned.conf
-    shell: pgtune -V '{{postgres.version}}' -S /usr/local/share/pgtune -o postgresql-tuned.conf -i postgresql.conf
-    args:
-      chdir: '{{config_dir}}'
-    become: yes
-    become_user: postgres
-    when: postgres.pgtune
-
-  - name: Override with the tuned version of postgresql.conf
-    file: path={{config_dir}}/postgresql.conf src=postgresql-tuned.conf state=link owner=postgres force=yes
-    when: postgres.pgtune
   
   # Generate host-based access rules
   

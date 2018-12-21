@@ -1,5 +1,15 @@
 ---
 
+  - name: Trust key for PostgreSQL APT repos
+    apt_key: 
+      url: https://www.postgresql.org/media/keys/ACCC4CF8.asc 
+      state: present
+
+  - name: Add PostgreSQL APT repos
+    copy: 
+      content: "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main" 
+      dest: /etc/apt/sources.list.d/postgresql.list
+
   - name: Update APT index
     apt: update_cache=yes
 
@@ -21,15 +31,3 @@
     with_items:
     - htop
 
-  - name: Download pgtune script
-    get_url: 
-      url: https://github.com/iterativo-git/pgtune/raw/iterativo-tune/pgtune
-      dest: /usr/local/bin/pgtune
-      mode: '0755'
-
-  - file: path=/usr/local/share/pgtune state=directory
-  - name: Download pgtune settings
-    get_url:
-      url: https://github.com/iterativo-git/pgtune/raw/iterativo-tune/pg_settings-{{postgres.version}}-64
-      dest: /usr/local/share/pgtune/pg_settings-{{postgres.version}}-64
-      mode: '0644'

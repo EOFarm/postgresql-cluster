@@ -2,7 +2,7 @@
 
 postgres:
   
-  pgtune: false
+  #pgtune: false
   
   # Define playbook-level directory to store/read credentials
   secrets_dir: '{{"files/secrets"| realpath}}'  
