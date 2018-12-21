@@ -5,7 +5,7 @@
      - replication.role == 'standby'
      - replication.standby.master_host in groups.all
  
- - wait_for: host={{replication.standby.master_host}} port={{postgres.service.port}} state=started
+ - wait_for: host={{replication.standby.master_host}} port=5432 state=started
 
  # Take a basebackup from master node
  
