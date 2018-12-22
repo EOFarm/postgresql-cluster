@@ -37,6 +37,10 @@ Also, group variables under `group_vars` must be configured. See `group_vars/*.y
 If we want a full Vagrant environment (of course we will also need `vagrant` installed), setup the machines and provision in multiple phases.
 All phases, apart from the initial `vagrant up`, delegate their work to Ansible playbooks.
 
+First, create some needed directories for secrets and temporary data:
+
+    mkdir -p files/secrets vagrant-data
+
 Setup machines (networking, ansible prerequisites):
 
     vagrant up --provision-with=shell,file
