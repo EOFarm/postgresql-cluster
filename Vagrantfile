@@ -8,7 +8,9 @@ inventory_file = ENV['INVENTORY_FILE'] || 'hosts.yml'
 inventory = YAML.load_file(inventory_file)
 inventory_vars = inventory['all']['vars']
 inventory_groups = inventory['all']['children']
-  
+
+storage_controller = ENV['STORAGE_CONTROLLER'] || 'SCSI Controller'
+
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/xenial64"
   config.vm.box_check_update = false
@@ -24,7 +26,7 @@ Vagrant.configure(2) do |config|
       vb.name = h['fqdn']
       vb.memory = 764
       vb.customize [ 'storageattach', :id, 
-        '--storagectl', 'SCSI Controller', '--port', 2, '--device', 0, '--type', 'hdd',
+        '--storagectl', storage_controller, '--port', 2, '--device', 0, '--type', 'hdd',
         '--medium', File.absolute_path("data/postgres-n1/1.vdi")]
     end
 
@@ -49,7 +51,7 @@ Vagrant.configure(2) do |config|
          vb.name = h['fqdn']
          vb.memory = 512
          vb.customize [ 'storageattach', :id, 
-           '--storagectl', 'SCSI Controller', '--port', 2, '--device', 0, '--type', 'hdd',
+           '--storagectl', storage_controller, '--port', 2, '--device', 0, '--type', 'hdd',
            '--medium', File.absolute_path("data/#{machine_name}/1.vdi")]
       end
     end

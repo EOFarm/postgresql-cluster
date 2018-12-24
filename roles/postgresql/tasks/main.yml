@@ -31,8 +31,8 @@
     when: replication.role == 'standby'
     tags: configure
  
-  - service: name=postgresql state=started
-  - service: name=rsync state=started
+  - service: name=postgresql state=started enabled=yes
+  - service: name=rsync state=started enabled=yes
   
   #
   # Create tablespaces
