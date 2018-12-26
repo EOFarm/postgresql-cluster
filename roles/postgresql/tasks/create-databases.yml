@@ -18,6 +18,7 @@
 
   - name: Load extensions into databases
     command: psql -c 'CREATE EXTENSION IF NOT EXISTS {{item.1}}' '{{item.0.name}}'
+    become: yes
     become_user: postgres
     with_subelements: 
     - '{{postgres.databases}}'
