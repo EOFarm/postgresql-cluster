@@ -1,15 +1,20 @@
 #!/bin/bash
 
-archive_dir=$1
+this_script=$(realpath $0)
+env_file="$(dirname ${this_script})/cluster-environment"
 
-accessed_before_days=$2
+. ${env_file}
 
-help="Usage: ${0} <archive-dir> <accessed-before-days>"
+archive_dir=${ARCHIVE_DIR}
 
 if [[ ! -d "${archive_dir}" ]]; then
-    echo ${help};
-    exit 1
+   echo "The archive directory is not a directory (is ARCHIVE_DIR set?)!"
+   exit 1
 fi
+
+accessed_before_days=$1
+
+help="Usage: ${0} <accessed-before-days>"
 
 if [[ "${accessed_before_days}" -lt "1" ]]; then
     echo "Error: The access time must be >= 1 (days)"
