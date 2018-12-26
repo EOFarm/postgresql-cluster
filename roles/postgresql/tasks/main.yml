@@ -34,6 +34,8 @@
   - service: name=postgresql state=started enabled=yes
   - service: name=rsync state=started enabled=yes
   
+  - service: name=postgresql@{{postgres.version}}-main.service state=started
+  
   #
   # Create tablespaces
   #
