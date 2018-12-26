@@ -1,0 +1,7 @@
+---
+
+  - file: path=scripts state=directory
+
+  - template: src=scripts/cluster-environment dest=scripts/cluster-environment mode=0664
+
+  - copy: src=scripts/cleanup-archive.sh dest=scripts/cleanup-archive.sh mode=0774
