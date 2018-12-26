@@ -6,3 +6,8 @@
    - role: postgresql
 
    tasks:
+
+   - file: path=scripts state=directory
+   - copy: src=files/scripts/cleanup-archive.sh dest=scripts/cleanup-archive.sh mode=0774
+
+
