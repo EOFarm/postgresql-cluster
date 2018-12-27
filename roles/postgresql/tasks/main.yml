@@ -9,7 +9,7 @@
   # Compute facts
   #
 
-  - service: name=postgresql state=started
+  - service: name=postgresql.service state=started
 
   - include: compute-facts.yml
   
@@ -17,8 +17,9 @@
   # Configure service 
   #
 
-  - service: name=postgresql state=stopped
-  - service: name=rsync state=stopped
+  - service: name=postgresql.service state=stopped
+  
+  - service: name=rsync.service state=stopped
   
   - include: configure-service.yml
     tags: configure
@@ -31,10 +32,10 @@
     when: replication.role == 'standby'
     tags: configure
  
-  - service: name=postgresql state=started enabled=yes
-  - service: name=rsync state=started enabled=yes
-  
+  - service: name=postgresql.service enabled=yes state=started
   - service: name=postgresql@{{postgres.version}}-main.service state=started
+  
+  - service: name=rsync.service state=started enabled=yes
   
   #
   # Create tablespaces
@@ -59,7 +60,7 @@
   # Take and apply basebackup from master (standby)
   #
 
-  - service: name=postgresql state=stopped
+  - service: name=postgresql.service state=stopped
     when: replication.role == 'standby'
     tags: basebackup
   
@@ -67,7 +68,7 @@
     when: replication.role == 'standby'
     tags: basebackup
   
-  - service: name=postgresql state=started
+  - service: name=postgresql.service state=started
     when: replication.role == 'standby'
     tags: basebackup
 
