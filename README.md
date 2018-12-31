@@ -50,6 +50,7 @@ Provision in several phases:
     vagrant provision --provision-with=setup-basic
     vagrant provision --provision-with=setup-data-partition
     vagrant provision --provision-with=setup-database
+    vagrant provision --provision-with=setup-balancer
 
 ## 2.2 Setup with Ansible only ##
 
@@ -59,3 +60,4 @@ then we can directly play the Ansible playbooks:
     ansible-playbook --become --become-user root play-basic.yml
     ansible-playbook --become --become-user root [-e data_partition=/dev/sdc1] play-data-partition.yml
     ansible-playbook --become --become-user root play-database.yml
+    ansible-playbook --become --become-user root play-balancer.yml

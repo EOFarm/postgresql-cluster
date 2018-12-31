@@ -1,0 +1,9 @@
+---
+
+pgpool:
+  
+  # The spec to use when generating user passwords
+  password_spec: 'chars=ascii_letters,digits length=9'
+
+  # The list of users to be authenticated
+  users: ['tester', 'nowhere-man']

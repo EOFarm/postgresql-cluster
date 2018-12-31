@@ -1,0 +1,20 @@
+---
+
+pgpool:
+  
+  # The directory to store/read credentials
+  secrets_dir: 'secrets'
+  
+  # The spec to use when generating user passwords
+  password_spec: 'chars=ascii_letters,digits length=9'
+
+  client_network: '127.0.0.1/8'
+  
+  # maximum number of concurrent sessions (clients)
+  max_number_of_sessions: 12
+
+  # interval (seconds) of replication-related periodic checks
+  replication_check_period: 16
+
+  users: []
+  #users: ['tester', 'nowhere-man']

@@ -1,0 +1,129 @@
+---
+ 
+ #
+ # Setup PgPool
+ #
+
+ - hosts: ['pgpool']
+
+   vars:
+     secrets_dir: '{{"files/secrets" | realpath}}'
+     password_spec: '{{postgres.password_spec}}'
+   
+   pre_tasks:
+
+   - set_fact:
+       pgpool_password: '{{lookup("password", secrets_dir ~ "/users/pgpool" ~ " " ~ password_spec)}}' 
+   
+   roles:
+   - role: pgpool
+     vars:
+       pgpool:
+         secrets_dir: '{{secrets_dir}}'
+         client_network: '{{network}}'
+
+   tasks:
+ 
+ #
+ # Add database user for querying status of nodes
+ #
+
+ - hosts: ['master', 'standby']
+   
+   vars:
+     pgpool_ipv4_address: "{{hostvars['pgpool']['ipv4_address']}}"
+
+   tasks:
+    
+   - shell: >
+        pg_lsclusters -h | awk '{print $1}'
+     become: yes
+     become_user: postgres
+     register: cluster_version_result
+   - set_fact:
+       postgres_version: "{{cluster_version_result.stdout}}"
+
+   - name: Add entry for user `pgpool` in pg_hba.conf
+     lineinfile:
+       path: "/etc/postgresql/{{postgres_version}}/main/pg_hba.conf"
+       insertbefore: "^host all all 127\\.0\\.0\\.1\\/8"
+       regexp: "^(host|hostssl) postgres pgpool"
+       line: "host postgres pgpool {{pgpool_ipv4_address}}/32 md5"
+    
+   - service: name=postgresql.service state=restarted  
+
+
+ - hosts: ['master']
+   
+   vars:
+     secrets_dir: '{{"files/secrets" | realpath}}'
+
+   tasks:
+   
+   - set_fact:
+       pgpool_password: '{{lookup("password", secrets_dir ~ "/users/pgpool")}}' 
+   
+   - name: List existing users
+     shell: psql -t -A -F ',' -c '\du'| awk -F ',' '{print $1}' 
+     become: yes
+     become_user: postgres
+     register: psql_du_result
+   - set_fact:
+       database_users: "{{psql_du_result.stdout_lines}}"
+
+   - name: Create database user `pgpool` for querying replication status
+     command: psql -c 'CREATE USER "pgpool" WITH LOGIN'
+     become: yes
+     become_user: postgres
+     when: not ('pgpool' in database_users)
+
+   - name: Update password for database user `pgpool`
+     command: psql -c 'ALTER ROLE "pgpool" PASSWORD $${{pgpool_password}}$$'
+     become: yes
+     become_user: postgres
+
+ #
+ # Check status of pool
+ #
+
+ - hosts: ['pgpool']
+
+   tasks:
+
+   - service: name=pgpool2.service state=started 
+
+   - name: Retrieve status of pool nodes
+     command: >
+       psql --no-align --pset 'footer=off' -F ',' -U pgpool -h '{{ipv4_address}}' -p '5433' -c 'SHOW pool_nodes' postgres
+     register: show_pool_nodes_result
+    
+   - set_fact:
+       pool_nodes: {}
+       pool_nodes_header: "{{show_pool_nodes_result.stdout_lines[0]}}"
+
+   - set_fact:
+       pool_nodes: '{{dict([[node_info.hostname, node_info]]) | combine(pool_nodes)}}'
+     with_items: "{{show_pool_nodes_result.stdout_lines[1:]}}"
+     vars:
+       node_info: "{{dict(pool_nodes_header.split(',') | zip(item.split(',')) | list)}}"
+
+   - assert: 
+       that:
+       - "n"
+       - "n.role == 'primary'"
+       - "n.status == 'up'"
+     with_items: "{{groups.master}}"
+     vars:
+       h: "{{hostvars[item].ipv4_address}}"
+       n: "{{pool_nodes[h] | default(false)}}"
+        
+   - assert: 
+       that:
+       - "n"
+       - "n.role == 'standby'"
+       - "n.status == 'up'"
+     with_items: "{{groups.standby}}"
+     vars:
+       h: "{{hostvars[item].ipv4_address}}"
+       n: "{{pool_nodes[h] | default(false)}}"
+

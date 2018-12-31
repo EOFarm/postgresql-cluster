@@ -1,9 +1,15 @@
 ---
 
- - hosts: all
-
+ - hosts: ['master', 'standby']
+   
+   vars:
+     secrets_dir: '{{"files/secrets" | realpath}}'
+ 
    roles:
    - role: postgresql
+     vars:
+       postgres:
+         secrets_dir: '{{secrets_dir}}'
 
    tasks:
 

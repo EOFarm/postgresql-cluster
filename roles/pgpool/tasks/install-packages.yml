@@ -1,0 +1,26 @@
+---
+
+  - name: Trust key for PostgreSQL APT repos
+    apt_key: 
+      url: https://www.postgresql.org/media/keys/ACCC4CF8.asc 
+      state: present
+
+  - name: Add PostgreSQL APT repos
+    copy: 
+      content: "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main" 
+      dest: /etc/apt/sources.list.d/postgresql.list
+
+  - name: Update APT index
+    apt: update_cache=yes
+
+  - name: Install packages (client PostgreSQL and PgPool-II)
+    apt: pkg={{item}} state=latest
+    with_items:
+    - "postgresql-client-{{postgres.version}}"
+    - "pgpool2"
+  
+  - name: Install auxiliary packages
+    apt: pkg={{item}} state=latest
+    with_items:
+    - "htop"
+

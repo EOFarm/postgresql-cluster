@@ -29,6 +29,15 @@ Vagrant.configure(2) do |config|
         '--storagectl', storage_controller, '--port', 2, '--device', 0, '--type', 'hdd',
         '--medium', File.absolute_path("data/postgres-n1/1.vdi")]
     end
+  
+    master.vm.provision "setup-data-partition", type: "ansible" do |ansible| 
+      ansible.playbook = 'play-data-partition.yml'
+      ansible.limit = 'all'
+      ansible.become = true
+      ansible.become_user = 'root'
+      ansible.inventory_path = inventory_file
+      ansible.verbose = true
+    end
 
     master.vm.provision "setup-database",  type: "ansible" do |ansible|
       ansible.playbook = 'play-database.yml'
@@ -57,6 +66,26 @@ Vagrant.configure(2) do |config|
     end
   end
 
+  # Define and provision balancer node (pgpool)
+
+  config.vm.define "pgpool" do |balancer|
+    h = inventory_groups['pgpool']['hosts']['pgpool']
+    balancer.vm.network "private_network", ip: h['ipv4_address']
+    balancer.vm.provider "virtualbox" do |vb|
+      vb.name = h['fqdn']
+      vb.memory = 384
+    end
+    
+    balancer.vm.provision "setup-balancer",  type: "ansible" do |ansible|
+      ansible.playbook = 'play-balancer.yml'
+      ansible.limit = 'all'
+      ansible.become = true
+      ansible.become_user = 'root'
+      ansible.inventory_path = inventory_file
+      ansible.verbose = true
+    end
+  end 
+
   # Provision (common)
   
   config.vm.provision "file", source: "keys/id_rsa", destination: ".ssh/id_rsa"
@@ -77,12 +106,4 @@ Vagrant.configure(2) do |config|
     ansible.verbose = true
   end
   
-  config.vm.provision "setup-data-partition", type: "ansible" do |ansible| 
-    ansible.playbook = 'play-data-partition.yml'
-    ansible.become = true
-    ansible.become_user = 'root'
-    ansible.inventory_path = inventory_file
-    ansible.verbose = true
-  end
-
 end

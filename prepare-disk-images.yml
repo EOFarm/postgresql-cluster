@@ -1,6 +1,6 @@
 ---
 
- - hosts: all
+ - hosts: ['master', 'standby']
    connection: local
 
    tasks:

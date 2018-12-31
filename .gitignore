@@ -15,6 +15,7 @@ scratch*.yml
 /group_vars/all.yml
 /group_vars/master.yml
 /group_vars/standby.yml
+/group_vars/pgpool.yml
 
 /.pyenv/
 

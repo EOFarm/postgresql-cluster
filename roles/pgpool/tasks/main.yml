@@ -1,0 +1,61 @@
+---
+ 
+  #- debug: var=postgres
+  #- debug: var=pgpool
+  
+  - include: install-packages.yml
+    tags: install
+  
+  - service: name=pgpool2.service state=started enabled=yes
+  
+  #
+  # Compute facts
+  #
+  
+  - set_fact:
+      database_hosts: "{{groups.master | union(groups.standby)}}"
+
+  - set_fact:
+      pgpool_password: "{{lookup('password', pgpool.secrets_dir ~ '/users/pgpool')}}"
+
+  #
+  # Configure service 
+  #
+
+  - service: name=pgpool2.service state=stopped
+
+  - name: Generate configuration for pcp.conf (credentials for PCP server)
+    template: src=etc/pgpool2/pcp.conf dest=/etc/pgpool2/pcp.conf owner=root group=postgres mode=0660
+
+  - name: Generate configuration for pool_hba.conf (host-based access rules for PgPool)
+    template: src=etc/pgpool2/pool_hba.conf dest=/etc/pgpool2/pool_hba.conf owner=root group=postgres mode=0660
+  
+  - name: Generate configuration for pgpool.conf
+    template: src=etc/pgpool2/pgpool.conf dest=/etc/pgpool2/pgpool.conf owner=root group=postgres mode=0660 backup=yes
+  
+  - name: Generate `pool_passwd` with credentials for database users authenticated against PgPool
+    lineinfile:
+      path: /etc/pgpool2/pool_passwd
+      regexp: "^{{username}}:"
+      line: "{{username}}:{{'md5' ~ (password ~ username) | md5}}"
+    with_items: "{{pgpool.users | union(['pgpool'])}}"
+    vars:
+      username: "{{item}}"
+      password: "{{lookup('password', pgpool.secrets_dir ~ '/users/' ~ item)}}"
+
+  - file: path=~/.pgpass state=touch mode=0600
+  
+  - name: Store credentials for user `pgpool` in `.pgpass`
+    lineinfile:
+      path: ~/.pgpass
+      regexp: "^{{ipv4_address | replace('.', '\\.')}}:5433:\\*:pgpool"
+      line: "{{ipv4_address}}:5433:*:pgpool:{{pgpool_password}}"
+      
+  #
+  # Start service
+  #
+
+  - name: Discard any previous status file (`pgpool_status`)
+    file: path=/var/run/postgresql/pgpool_status state=absent
+
+  - service: name=pgpool2.service state=started

@@ -12,7 +12,7 @@ all:
           ansible_port: 22
           fqdn: postgres-n1.internal
           hostname: postgres-n1
-          ipv4_address: '10.0.4.95'
+          ipv4_address: '10.0.4.70'
     'standby':
       hosts:
         'postgres-n2':
@@ -20,5 +20,14 @@ all:
           ansible_port: 22
           fqdn: postgres-n2.internal
           hostname: postgres-n2
-          ipv4_address: '10.0.4.96'
-         
+          ipv4_address: '10.0.4.71'
+    'pgpool':
+      hosts:
+        'pgpool':
+          ansible_host: pgpool.internal
+          ansible_port: 22
+          fqdn: pgpool.internal
+          hostname: pgpool
+          ipv4_address: '10.0.4.80'
+
+ 

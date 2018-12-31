@@ -2,10 +2,8 @@
 
 postgres:
   
-  #pgtune: false
-  
-  # Define playbook-level directory to store/read credentials
-  secrets_dir: '{{"files/secrets"| realpath}}'  
+  # The spec to use when generating user passwords
+  password_spec: 'chars=ascii_letters,digits length=9'
 
   # Define users
   users:
