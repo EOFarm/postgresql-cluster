@@ -4,7 +4,7 @@
  # Setup partition for database tablespace
  #
 
- - hosts: all
+ - hosts: ['master', 'standby']
 
    vars:
      #data_partition: /dev/sdc1

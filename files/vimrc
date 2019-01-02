@@ -1,0 +1,9 @@
+syntax on
+
+set ruler
+set number
+set hlsearch
+set ai
+set tabstop=4
+set expandtab
+set shiftwidth=4

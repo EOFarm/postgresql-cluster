@@ -38,6 +38,15 @@ Vagrant.configure(2) do |config|
       ansible.inventory_path = inventory_file
       ansible.verbose = true
     end
+    
+    master.vm.provision "setup-data-partition", type: "ansible" do |ansible| 
+      ansible.playbook = 'play-data-partition.yml'
+      ansible.limit = 'all'
+      ansible.become = true
+      ansible.become_user = 'root'
+      ansible.inventory_path = inventory_file
+      ansible.verbose = true
+    end
 
   end
 
@@ -77,12 +86,4 @@ Vagrant.configure(2) do |config|
     ansible.verbose = true
   end
   
-  config.vm.provision "setup-data-partition", type: "ansible" do |ansible| 
-    ansible.playbook = 'play-data-partition.yml'
-    ansible.become = true
-    ansible.become_user = 'root'
-    ansible.inventory_path = inventory_file
-    ansible.verbose = true
-  end
-
 end
