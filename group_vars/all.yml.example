@@ -3,9 +3,6 @@
 postgres:
   
   pgtune: false
-  
-  # Define playbook-level directory to store/read credentials
-  secrets_dir: '{{"files/secrets"| realpath}}'  
 
   # Define users
   users:
