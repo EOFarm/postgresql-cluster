@@ -6,6 +6,10 @@
   - assert:
       that: not (replication.role == 'standby') or (replication.standby.master_host in groups.all)
 
+  - set_fact:
+      secrets_dir: '{{postgres.secrets_dir}}'
+      password_spec: '{{postgres.password_spec}}'
+
   # Compute basic directory paths
   
   - set_fact:
@@ -30,7 +34,7 @@
   # Generate password for archive transfers 
   
   - set_fact:
-      rsync_password: '{{lookup("password", postgres.secrets_dir ~ "/rsync" ~ " " ~ "chars=ascii_letters,digits")}}' 
+      rsync_password: '{{lookup("password", secrets_dir ~ "/rsync" ~ " " ~ "chars=ascii_letters,digits")}}' 
 
   # Compute user-related facts
   
@@ -44,10 +48,6 @@
       known_users: '{{known_users| union([replication.user])}}'
     when: replication.user
   
-  - set_fact:
-      secrets_dir: '{{postgres.secrets_dir}}'
-      password_spec: '{{postgres.password_spec}}'
-
   # Compute tablespace-related facts
 
   - name: List existing tablespaces
