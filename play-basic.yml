@@ -48,7 +48,7 @@
    - file: path=~/bin state=directory
    
    - copy: src=files/{{item.key}} dest=~/{{item.value}} mode=0644
-     with_dict: { 'profile': '.profile', 'bashrc': '.bashrc' }
+     with_dict: { 'profile': '.profile', 'bashrc': '.bashrc', 'vimrc': '.vimrc' }
     
    - authorized_key:
        user: root
